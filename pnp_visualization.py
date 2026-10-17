@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import math
+
 import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
@@ -15,6 +17,21 @@ def _fixed(fig: go.Figure, height: int = 360, **layout) -> go.Figure:
     fig.update_xaxes(fixedrange=True)
     fig.update_yaxes(fixedrange=True)
     return fig
+
+
+def _ref_line(fig: go.Figure, value: float, line: dict, text: str, position: str, axis: str) -> None:
+    """Referenzlinie mit Beschriftung auf einer logarithmischen Achse: die Linie liegt auf dem Datenwert, die Beschriftung braucht log10 des Werts
+    (add_hline und add_vline setzen beide auf denselben Wert, die Beschriftung sitzt dann falsch und dehnt die Achse)."""
+    if not value > 0.0:
+        return
+    pos = math.log10(value)
+    top, left = "top" in position, "left" in position
+    if axis == "y":
+        fig.add_hline(y=value, line=line)
+        fig.add_annotation(xref="paper", yref="y", x=0 if left else 1, y=pos, text=text, showarrow=False, xanchor="left" if left else "right", yanchor="bottom" if top else "top")
+    else:
+        fig.add_vline(x=value, line=line)
+        fig.add_annotation(xref="x", yref="paper", x=pos, y=1 if top else 0, text=text, showarrow=False, xanchor="right" if left else "left", yanchor="top" if top else "bottom")
 
 
 def build_table(a: Analysis, rows: int = 40) -> pd.DataFrame:
@@ -46,8 +63,8 @@ def build_history_chart(a: Analysis) -> go.Figure:
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=steps[1:], y=a.err_hist[1:], mode="lines", name="Plug-and-Play", line=dict(color=C.COLOR_PNP, width=3), hovertemplate="Schritt %{x}<br>Fehler %{y:.3f}<extra></extra>"))
     fig.add_trace(go.Scatter(x=[max(k, 1)], y=[float(a.err_hist[max(k, 1)])], mode="markers", name=f"kleinster Fehler (Schritt {k})", marker=dict(symbol="x", size=12, color=C.COLOR_L1, line=dict(width=2))))
-    fig.add_hline(y=a.err_tik, line=dict(color=C.COLOR_TIK, width=2, dash="dash"), annotation_text="Tikhonov", annotation_position="top left")
-    fig.add_hline(y=a.err_l1, line=dict(color=C.COLOR_L1, width=1.5, dash="dot"), annotation_text="L1 exakt", annotation_position="bottom left")
+    _ref_line(fig, a.err_tik, dict(color=C.COLOR_TIK, width=2, dash="dash"), "Tikhonov", "top left", "y")
+    _ref_line(fig, a.err_l1, dict(color=C.COLOR_L1, width=1.5, dash="dot"), "L1 exakt", "bottom left", "y")
     fig.update_xaxes(title="Schritt", type="log")
     fig.update_yaxes(title="relativer Fehler", type="log", exponentformat="power")
     return _fixed(fig, 340)
@@ -57,10 +74,10 @@ def build_strength_chart(a: Analysis) -> go.Figure:
     """Fehler nach den gewählten Schritten über die Stärke des Denoisers (Gitter), mit bester und gewählter Stärke."""
     fig = go.Figure()
     fig.add_trace(go.Scatter(x=a.grid, y=a.grid_errs, mode="lines+markers", name="Plug-and-Play", line=dict(color=C.COLOR_PNP, width=3), marker=dict(size=6), hovertemplate="Stärke %{x:.2e}<br>Fehler %{y:.3f}<extra></extra>"))
-    fig.add_hline(y=a.err_tik, line=dict(color=C.COLOR_TIK, width=2, dash="dash"), annotation_text="Tikhonov", annotation_position="top left")
+    _ref_line(fig, a.err_tik, dict(color=C.COLOR_TIK, width=2, dash="dash"), "Tikhonov", "top left", "y")
     fig.add_trace(go.Scatter(x=[a.best_strength], y=[float(a.grid_errs[a.best_index])], mode="markers", name="beste Stärke", marker=dict(symbol="x", size=12, color=C.COLOR_L1, line=dict(width=2))))
     if a.settings.factor != 1.0:
-        fig.add_vline(x=a.strength, line=dict(color=C.COLOR_GREY, width=1.5, dash="dot"), annotation_text="gewählt", annotation_position="top right")
+        _ref_line(fig, a.strength, dict(color=C.COLOR_GREY, width=1.5, dash="dot"), "gewählt", "top right", "x")
     fig.update_xaxes(title=f"Stärke ({C.DENOISER_UNIT[a.settings.denoiser]})", type="log", exponentformat="power")
     fig.update_yaxes(title="relativer Fehler", type="log", exponentformat="power")
     return _fixed(fig, 340)
