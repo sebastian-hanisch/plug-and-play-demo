@@ -1,5 +1,7 @@
 # Plug-and-Play: Der Denoiser ist der Prior – Streamlit-Demo
 
+**[→ Demo live ausprobieren](https://sebastianhanisch-plug-and-play-demo.streamlit.app/)**
+
 Dreizehntes Stück der Linie **Inverse Probleme und Regularisierung** in der „Konzepte“-Reihe im Portfolio von [Sebastian Hanisch](https://sebastianhanisch.net) (Operations Research und Machine Learning). Es baut auf [sparsity-tv-demo](https://github.com/sebastian-hanisch/sparsity-tv-demo), [bayes-map-demo](https://github.com/sebastian-hanisch/bayes-map-demo), [iterativ-demo](https://github.com/sebastian-hanisch/iterativ-demo), [tikhonov-demo](https://github.com/sebastian-hanisch/tikhonov-demo) und [blinde-entfaltung-demo](https://github.com/sebastian-hanisch/blinde-entfaltung-demo) auf und nutzt dieselbe Welt: eine lineare Entfaltung (n = 48) mit Gauß-Unschärfe (w = 0,03) und weißem Rauschen. Die Wahrheit ist bekannt, weil das Signal selbst die Wahrheit ist; sie dient hier nur als Maßstab.
 
 ## Kernfrage
